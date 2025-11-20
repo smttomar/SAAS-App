@@ -1,0 +1,21 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "binary"   // REQUIRED on Windows to avoid WASM errors
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Video {
+  id             String   @id @default(cuid())
+  title          String
+  description    String?
+  publicId       String   @unique   // <-- REQUIRED FOR DELETE BY publicId
+  originalSize   Int
+  compressedSize Int
+  duration       Float
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
