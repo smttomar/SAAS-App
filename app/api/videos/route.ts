@@ -6,6 +6,18 @@ const prisma = new PrismaClient();
 export async function GET(request: NextRequest) {
     try {
         const videos = await prisma.video.findMany({
+            select: {
+                id: true,
+                title: true,
+                publicId: true,
+                description: true,
+                originalSize: true,
+                compressedSize: true,
+                duration: true,
+                ownerId: true, // ✅ ADD THIS
+                createdAt: true,
+                updatedAt: true,
+            },
             orderBy: { createdAt: "desc" },
         });
         return NextResponse.json(videos);
