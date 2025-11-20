@@ -6,15 +6,21 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { filesize } from "filesize";
 import { Video } from "@prisma/client";
 import VideoPlayerModal from "./VideoPlayerModal";
+import { toast } from "react-hot-toast";
 
 dayjs.extend(relativeTime);
 
 interface VideoCardProps {
     video: Video;
     onDownload: (url: string, title: string) => void;
+    currentUserId: string | null;
 }
 
-const VideoCard: React.FC<VideoCardProps> = ({ video, onDownload }) => {
+const VideoCard: React.FC<VideoCardProps> = ({
+    video,
+    onDownload,
+    currentUserId,
+}) => {
     const [isHovered, setIsHovered] = useState(false);
     const [previewError, setPreviewError] = useState(false);
     const [showPlayer, setShowPlayer] = useState(false);
@@ -82,7 +88,7 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onDownload }) => {
             window.URL.revokeObjectURL(blobUrl);
         } catch (err) {
             console.error("Download failed:", err);
-            alert("Download failed. See console for details.");
+            toast.error("Download failed. See console for details.");
         }
     };
 
@@ -90,9 +96,10 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onDownload }) => {
         setPreviewError(false);
     }, [isHovered]);
 
+    const isOwner = currentUserId === video.ownerId;
+
     return (
         <>
-            {/* Card */}
             <div
                 className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer"
                 onMouseEnter={() => !showPlayer && setIsHovered(true)}
@@ -100,7 +107,6 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onDownload }) => {
                 onClick={() => setShowPlayer(true)}
             >
                 <figure className="aspect-video relative">
-                    {/* STOP preview while modal is open */}
                     {!showPlayer && (
                         <>
                             {isHovered ? (
@@ -140,49 +146,18 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onDownload }) => {
                     <h2 className="card-title text-lg font-bold">
                         {video.title}
                     </h2>
-                    <p className="text-sm text-base-content opacity-70 mb-4">
+                    <p className="text-sm opacity-70 mb-4">
                         {video.description}
                     </p>
-                    <p className="text-sm text-base-content opacity-70 mb-4">
+                    <p className="text-sm opacity-70 mb-4">
                         Uploaded {dayjs(video.createdAt).fromNow()}
                     </p>
 
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div className="flex items-center">
-                            <FileUp size={18} className="mr-2 text-primary" />
-                            <div>
-                                <div className="font-semibold">Original</div>
-                                <div>
-                                    {formatSize(Number(video.originalSize))}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center">
-                            <FileDown
-                                size={18}
-                                className="mr-2 text-secondary"
-                            />
-                            <div>
-                                <div className="font-semibold">Compressed</div>
-                                <div>
-                                    {formatSize(Number(video.compressedSize))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <div className="flex justify-between items-center mt-4">
-                        <div className="text-sm font-semibold">
-                            Compression:{" "}
-                            <span className="text-accent">
-                                {compressionPercentage}%
-                            </span>
-                        </div>
                         <button
                             className="btn btn-primary btn-sm"
                             onClick={(e) => {
-                                e.stopPropagation(); // Prevent opening modal when clicking download
+                                e.stopPropagation();
                                 handleDownload(
                                     getFullVideoUrl(video.publicId),
                                     video.title
@@ -191,41 +166,91 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onDownload }) => {
                         >
                             <Download size={16} />
                         </button>
-                        <button
-                            className="btn btn-error btn-sm"
-                            onClick={async (e) => {
-                                e.stopPropagation(); // prevent opening video modal
 
-                                const confirmed = confirm(
-                                    "Are you sure you want to delete this video?"
-                                );
-                                if (!confirmed) return;
+                        {/* DELETE BUTTON ONLY IF OWNER */}
+                        {isOwner && (
+                            <button
+                                className="btn btn-error btn-sm"
+                                onClick={(e) => {
+                                    e.stopPropagation();
 
-                                const res = await fetch("/api/delete-video", {
-                                    method: "POST",
-                                    headers: {
-                                        "Content-Type": "application/json",
-                                    },
-                                    body: JSON.stringify({
-                                        publicId: video.publicId,
-                                    }),
-                                });
+                                    toast(
+                                        (t) => (
+                                            <div className="flex flex-col gap-2">
+                                                <span>
+                                                    Are you sure you want to
+                                                    delete this video?
+                                                </span>
 
-                                if (res.ok) {
-                                    alert("Video deleted successfully.");
-                                    window.location.reload();
-                                } else {
-                                    alert("Delete failed.");
-                                }
-                            }}
-                        >
-                            Delete
-                        </button>
+                                                <div className="flex gap-2">
+                                                    {/* Confirm Button */}
+                                                    <button
+                                                        className="btn btn-error btn-xs"
+                                                        onClick={async () => {
+                                                            toast.dismiss(t.id);
+
+                                                            const res =
+                                                                await fetch(
+                                                                    "/api/delete-video",
+                                                                    {
+                                                                        method: "POST",
+                                                                        headers:
+                                                                            {
+                                                                                "Content-Type":
+                                                                                    "application/json",
+                                                                            },
+                                                                        body: JSON.stringify(
+                                                                            {
+                                                                                publicId:
+                                                                                    video.publicId,
+                                                                            }
+                                                                        ),
+                                                                    }
+                                                                );
+
+                                                            if (res.ok) {
+                                                                toast.success(
+                                                                    "Video deleted successfully."
+                                                                );
+                                                                setTimeout(
+                                                                    () => {
+                                                                        window.location.reload();
+                                                                    },
+                                                                    800
+                                                                );
+                                                            } else {
+                                                                toast.error(
+                                                                    "Delete failed."
+                                                                );
+                                                            }
+                                                        }}
+                                                    >
+                                                        Yes, Delete
+                                                    </button>
+
+                                                    {/* Cancel Button */}
+                                                    <button
+                                                        className="btn btn-neutral btn-xs"
+                                                        onClick={() =>
+                                                            toast.dismiss(t.id)
+                                                        }
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ),
+                                        { duration: 5000 }
+                                    );
+                                }}
+                            >
+                                Delete
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
 
-            {/* Modal renders OUTSIDE card → this fixes close issue */}
             {showPlayer && (
                 <VideoPlayerModal
                     url={getFullVideoUrl(video.publicId)}

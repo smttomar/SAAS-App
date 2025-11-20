@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { auth } from "@clerk/nextjs/server";
 
 const prisma = new PrismaClient();
 
 export async function POST(req: NextRequest) {
     try {
+        // Get logged-in user
+        const { userId } = await auth();
+
+        if (!userId) {
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
         const body = await req.json();
 
         const video = await prisma.video.create({
@@ -15,6 +26,7 @@ export async function POST(req: NextRequest) {
                 originalSize: Number(body.originalSize),
                 compressedSize: Number(body.compressedSize),
                 duration: Number(body.duration),
+                ownerId: userId, // ✅ REQUIRED!
             },
         });
 

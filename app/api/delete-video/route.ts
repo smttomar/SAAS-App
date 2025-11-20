@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import { PrismaClient } from "@prisma/client";
+import { auth } from "@clerk/nextjs/server";
 
 const prisma = new PrismaClient();
 
@@ -13,6 +14,15 @@ cloudinary.config({
 
 export async function POST(req: NextRequest) {
     try {
+        const { userId } = await auth();
+
+        if (!userId) {
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
         const { publicId } = await req.json();
 
         if (!publicId) {
@@ -22,19 +32,34 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // Delete from Cloudinary
-        const cloudRes = await cloudinary.uploader.destroy(publicId, {
-            resource_type: "video",
+        // Find video in database
+        const video = await prisma.video.findUnique({
+            where: { publicId },
         });
 
-        if (cloudRes.result !== "ok") {
+        if (!video) {
             return NextResponse.json(
-                { error: "Failed to delete video from Cloudinary" },
-                { status: 500 }
+                { error: "Video not found" },
+                { status: 404 }
             );
         }
 
-        // Delete from Prisma database
+        // 🔥 CHECK OWNER
+        if (video.ownerId !== userId) {
+            return NextResponse.json(
+                {
+                    error: "Forbidden: You are not allowed to delete this video",
+                },
+                { status: 403 }
+            );
+        }
+
+        // Delete from Cloudinary
+        await cloudinary.uploader.destroy(publicId, {
+            resource_type: "video",
+        });
+
+        // Delete from database
         await prisma.video.delete({
             where: { publicId },
         });

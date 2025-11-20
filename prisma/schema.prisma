@@ -1,6 +1,6 @@
 generator client {
   provider   = "prisma-client-js"
-  engineType = "binary"   // REQUIRED on Windows to avoid WASM errors
+  engineType = "binary"
 }
 
 datasource db {
@@ -12,10 +12,11 @@ model Video {
   id             String   @id @default(cuid())
   title          String
   description    String?
-  publicId       String   @unique   // <-- REQUIRED FOR DELETE BY publicId
-  originalSize   Int
-  compressedSize Int
-  duration       Float
+  publicId       String   @unique
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  duration       Float
+  originalSize   Int
+  compressedSize Int
+  ownerId        String
 }

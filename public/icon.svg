@@ -1,0 +1,8 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background: red, with more rounded corners (not like YouTube) -->
+  <rect width="256" height="256" rx="200" fill="#c50707"/>
+
+  <!-- Custom play button: wider triangle, slightly curved edges -->
+  <path d="M110 85 L175 128 L110 171 Z" fill="#ffffff" stroke="white" stroke-width="5" 
+        transform="scale(0.9) translate(15, 15)"/>
+</svg>

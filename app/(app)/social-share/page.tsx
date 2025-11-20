@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { CldImage } from "next-cloudinary";
+import toast from "react-hot-toast";
 
 const socialFormats = {
     "Instagram Square (1:1)": { width: 1080, height: 1080, aspectRatio: "1:1" },
@@ -57,7 +58,7 @@ export default function SocialShare() {
             setUploadedImage(data.publicId);
         } catch (error) {
             console.log(error);
-            alert("Failed to upload image");
+            toast.error("Failed to upload image");
         } finally {
             setIsUploading(false);
         }

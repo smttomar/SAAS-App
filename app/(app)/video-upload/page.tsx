@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function VideoUploadPage() {
     const [file, setFile] = useState<File | null>(null);
@@ -16,11 +17,11 @@ export default function VideoUploadPage() {
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!file) {
-            alert("Please select a video file.");
+            toast.success("Please select a video file.");
             return;
         }
         if (file.size > MAX_FILE_SIZE) {
-            alert("Video file exceeds 500MB limit.");
+            toast.error("Video file exceeds 500MB limit.");
             return;
         }
 
@@ -62,11 +63,11 @@ export default function VideoUploadPage() {
                 }),
             });
 
-            alert("Upload successful!");
+            toast.success("Upload successful!");
             router.push("/");
         } catch (err) {
             console.error("Upload error:", err);
-            alert("Video upload failed.");
+            toast.error("Video upload failed.");
         } finally {
             setIsUploading(false);
         }
