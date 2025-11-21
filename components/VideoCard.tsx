@@ -86,6 +86,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
             a.remove();
 
             window.URL.revokeObjectURL(blobUrl);
+            toast.success("Download started!");
         } catch (err) {
             console.error("Download failed:", err);
             toast.error("Download failed. See console for details.");

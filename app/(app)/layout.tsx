@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useClerk, useUser } from "@clerk/nextjs";
@@ -12,6 +12,7 @@ import {
     UploadIcon,
     ImageIcon,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 const sidebarItems = [
     { href: "/home", icon: LayoutDashboardIcon, label: "Home Page" },
@@ -35,8 +36,15 @@ export default function AppLayout({
     };
 
     const handleSignOut = async () => {
-        await signOut({ redirectUrl: "/sign-in" });
+        await signOut({ redirectUrl: "/home" });
+        toast.success("Signed out successfully");
     };
+
+    useEffect(() => {
+        if (user) {
+            toast.success(`🚀 Welcome ${user.username || user.firstName}`);
+        }
+    }, [user]);
 
     return (
         <div className="drawer lg:drawer-open">
@@ -67,7 +75,7 @@ export default function AppLayout({
                             </Link>
                         </div>
                         <div className="flex-none flex items-center space-x-4">
-                            {user && (
+                            {user ? (
                                 <>
                                     <div className="avatar">
                                         <div className="w-8 h-8 rounded-full">
@@ -92,6 +100,13 @@ export default function AppLayout({
                                         <LogOutIcon className="h-6 w-6" />
                                     </button>
                                 </>
+                            ) : (
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={() => router.push("/sign-in")}
+                                >
+                                    Sign In
+                                </button>
                             )}
                         </div>
                     </div>
@@ -130,8 +145,8 @@ export default function AppLayout({
                             </li>
                         ))}
                     </ul>
-                    {user && (
-                        <div className="p-4">
+                    <div className="p-4">
+                        {user ? (
                             <button
                                 onClick={handleSignOut}
                                 className="btn btn-outline btn-error w-full"
@@ -139,8 +154,15 @@ export default function AppLayout({
                                 <LogOutIcon className="mr-2 h-5 w-5" />
                                 Sign Out
                             </button>
-                        </div>
-                    )}
+                        ) : (
+                            <button
+                                className="btn btn-primary w-full"
+                                onClick={() => router.push("/sign-in")}
+                            >
+                                Sign In
+                            </button>
+                        )}
+                    </div>
                 </aside>
             </div>
         </div>
