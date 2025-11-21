@@ -12,7 +12,7 @@ export default function VideoUploadPage() {
 
     const router = useRouter();
 
-    const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
+    const MAX_FILE_SIZE = 100 * 1024 * 1024; // 500MB
 
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -21,7 +21,7 @@ export default function VideoUploadPage() {
             return;
         }
         if (file.size > MAX_FILE_SIZE) {
-            toast.error("Video file exceeds 500MB limit.");
+            toast.error("Video file exceeds 100MB limit.");
             return;
         }
 
@@ -104,7 +104,13 @@ export default function VideoUploadPage() {
 
                 <div>
                     <label className="label">
-                        <span className="label-text">Video File</span>
+                        <span className="label-text">
+                            Video File{" "}
+                            <p className="text-red-400">
+                                {" "}
+                                Maximum upload size is 100 MB.{" "}
+                            </p>
+                        </span>
                     </label>
                     <input
                         type="file"
