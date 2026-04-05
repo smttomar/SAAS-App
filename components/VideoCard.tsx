@@ -44,6 +44,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
             width: 1920,
             height: 1080,
             format: "mp4",
+            quality: "auto",
         });
     }, []);
 
@@ -53,6 +54,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
             width: 400,
             height: 225,
             format: "mp4",
+            quality: "auto",
             rawTransformations: [
                 "e_preview:duration_10:max_seg_9:min_seg_dur_1",
             ],
@@ -66,9 +68,10 @@ const VideoCard: React.FC<VideoCardProps> = ({
         return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
     }, []);
 
-    const compressionPercentage = Math.round(
-        (1 - Number(video.compressedSize) / Number(video.originalSize)) * 100
-    );
+    const compressionPercentage =
+        video.originalSize > 0 && video.compressedSize > 0
+            ? Math.round((1 - video.compressedSize / video.originalSize) * 100)
+            : 0;
 
     const handleDownload = async (url: string, title: string) => {
         try {
@@ -98,6 +101,9 @@ const VideoCard: React.FC<VideoCardProps> = ({
     }, [isHovered]);
 
     const isOwner = currentUserId === video.ownerId;
+
+    console.log("Original:", video.originalSize);
+    console.log("Compressed:", video.compressedSize);
 
     return (
         <>
@@ -154,6 +160,38 @@ const VideoCard: React.FC<VideoCardProps> = ({
                         Uploaded {dayjs(video.createdAt).fromNow()}
                     </p>
 
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="flex items-center">
+                            <FileUp size={18} className="mr-2 text-primary" />
+                            <div>
+                                <div className="font-semibold">Original</div>
+                                <div>
+                                    {formatSize(Number(video.originalSize))}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex items-center">
+                            <FileDown
+                                size={18}
+                                className="mr-2 text-secondary"
+                            />
+                            <div>
+                                <div className="font-semibold">Compressed</div>
+                                <div>
+                                    {formatSize(Number(video.compressedSize))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex justify-between items-center mt-4">
+                        <div className="text-sm font-semibold">
+                            Compression:{" "}
+                            <span className="text-accent">
+                                {compressionPercentage}%
+                            </span>
+                        </div>
+                    </div>
+
                     <div className="flex justify-between items-center mt-4">
                         <button
                             className="btn btn-primary btn-sm"
@@ -161,7 +199,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
                                 e.stopPropagation();
                                 handleDownload(
                                     getFullVideoUrl(video.publicId),
-                                    video.title
+                                    video.title,
                                 );
                             }}
                         >
@@ -204,24 +242,24 @@ const VideoCard: React.FC<VideoCardProps> = ({
                                                                             {
                                                                                 publicId:
                                                                                     video.publicId,
-                                                                            }
+                                                                            },
                                                                         ),
-                                                                    }
+                                                                    },
                                                                 );
 
                                                             if (res.ok) {
                                                                 toast.success(
-                                                                    "Video deleted successfully."
+                                                                    "Video deleted successfully.",
                                                                 );
                                                                 setTimeout(
                                                                     () => {
                                                                         window.location.reload();
                                                                     },
-                                                                    800
+                                                                    800,
                                                                 );
                                                             } else {
                                                                 toast.error(
-                                                                    "Delete failed."
+                                                                    "Delete failed.",
                                                                 );
                                                             }
                                                         }}
@@ -241,7 +279,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
                                                 </div>
                                             </div>
                                         ),
-                                        { duration: 5000 }
+                                        { duration: 5000 },
                                     );
                                 }}
                             >

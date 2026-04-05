@@ -18,7 +18,7 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
             <div className="relative">
                 <button
                     onClick={onClose}
-                    className="absolute -top-10 right-0 text-white text-2xl"
+                    className="absolute -top-10 right-0 text-white text-2xl hover:cursor-pointer"
                 >
                     ✖
                 </button>

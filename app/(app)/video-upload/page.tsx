@@ -14,6 +14,15 @@ export default function VideoUploadPage() {
 
     const MAX_FILE_SIZE = 100 * 1024 * 1024; // 500MB
 
+    const getCompressedSize = async (publicId: string) => {
+        const url = `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload/q_auto,f_mp4/${publicId}.mp4`;
+
+        const res = await fetch(url);
+        const blob = await res.blob();
+
+        return blob.size;
+    };
+
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!file) {
@@ -39,7 +48,7 @@ export default function VideoUploadPage() {
                 {
                     method: "POST",
                     body: cloudForm,
-                }
+                },
             );
 
             const cloudData = await cloudRes.json();
@@ -50,6 +59,8 @@ export default function VideoUploadPage() {
             }
 
             // 2️⃣ Save video metadata to DB
+            const compressedSize = await getCompressedSize(cloudData.public_id);
+
             await fetch("/api/save-video", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -58,7 +69,7 @@ export default function VideoUploadPage() {
                     description,
                     publicId: cloudData.public_id,
                     originalSize: file.size,
-                    compressedSize: cloudData.bytes,
+                    compressedSize: compressedSize, // ✅ FIXED
                     duration: cloudData.duration,
                 }),
             });
